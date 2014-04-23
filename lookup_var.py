@@ -1,9 +1,7 @@
 #!/broad/software/free/Linux/redhat_5_x86_64/pkgs/python_2.7.1-sqlite3-rtrees/bin/python
 
 # look up a variant of interest in a reference VCF
-# usage: python lookup_var.py reference.vcf reftable.txt chr pos ref alt
-
-# prerequisites in path: tabix, awk, grep
+# usage: python lookup_var.py chr pos ref alt reference.vcf.gz [-t reftable.txt]
 
 import sys
 import re
@@ -105,11 +103,11 @@ def find_var_indivs(refvcf,reftable,chr,pos,ref,alt):
 				project_name = get_project_name(reftable,sample_name)
 				if project_name is None:
 					project_name = ""
-				print sample_name+"\t"+project_name+"\t"+call_info
+				print "%s\t%s\t%s" % (sample_name, project_name, call_info)
 		else:
 			print "#SAMPLE\tCALL"
 			for sample_name, call_info in variant_indivs.iteritems():
-				print sample_name+"\t"+call_info
+				print "%s\t%s" % (sample_name, call_info)
 
 if __name__ == '__main__':
 	parser = argparse.ArgumentParser(description='Look up a variant in a reference VCF.')
