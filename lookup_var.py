@@ -11,6 +11,7 @@ import os.path
 import subprocess
 import minimal_representation as mr
 import gzip
+import pysam
 
 # indices of relevant columns in reftable, in 1-based numbering
 # (1-based because these will go to awk, not python
@@ -31,12 +32,9 @@ def get_vcf_colnames(refvcf):
 def get_vcf_lines(refvcf,pos_buffer,chr,pos):
 	startpos = int(pos) - pos_buffer
 	endpos = int(pos) + pos_buffer
-	locus_string = chr+":"+str(startpos)+"-"+str(endpos)
-	tabix_command = "tabix " + refvcf + " " + locus_string
-	# print tabix_command
-	tabix_output = subprocess.check_output(tabix_command,
-		stderr=subprocess.STDOUT,shell=True)
-	lines = tabix_output.split("\n")
+	tabixfile = pysam.Tabixfile(refvcf)
+	vcfline_generator = tabixfile.fetch(chr,startpos,endpos)
+	lines = list(vcfline_generator)
 	return lines
 
 def find_var_indivs(refvcf,reftable,chr,pos,ref,alt):
@@ -48,7 +46,9 @@ def find_var_indivs(refvcf,reftable,chr,pos,ref,alt):
 	print pos, ref, alt
 	# use tabix to grab 100 bp on either side of putative variant
 	lines = get_vcf_lines(refvcf,100,chr,pos)
+	# get the #CHROM line from the gzipped VCF
 	column_names = get_vcf_colnames(refvcf)
+	# now search the lines for the variant of interest
 	match_found = False # default is you haven't found a matching variant
 	for line in lines:
 		cols = line.split("\t")
@@ -104,7 +104,6 @@ def find_var_indivs(refvcf,reftable,chr,pos,ref,alt):
 			print "#SAMPLE\tCALL"
 			for sample_name, call_info in variant_indivs.iteritems():
 				print sample_name+"\t"+call_info
-
 
 if __name__ == '__main__':
 	if len(sys.argv) < 7:
