@@ -10,6 +10,7 @@ import re
 import os.path
 import subprocess
 import minimal_representation as mr
+import gzip
 
 # size of buffer around position to look in VCF
 pos_buffer = 100
@@ -18,6 +19,15 @@ pos_buffer = 100
 # (1-based because these will go to awk, not python
 sample_name_colno = 5 # NAME_IN_VCF column
 project_name_colno = 3 # PROJECT_OR_COHORT_NAME column
+
+# courtesy of Konrad
+def get_vcf_colnames(refvcf):
+	with gzip.open(refvcf) as f:
+		for line in f:
+			if line.startswith('#CHROM'):
+				column_names = line.strip().split()
+				break
+	return column_names
 
 def find_var_indivs(refvcf,reftable,chr,pos,ref,alt):
 	# dictionary to hold info on people with the variant allele
@@ -34,22 +44,7 @@ def find_var_indivs(refvcf,reftable,chr,pos,ref,alt):
 	# print tabix_command
 	tabix_output = subprocess.check_output(tabix_command,
 		stderr=subprocess.STDOUT,shell=True)
-	# use grep to get the header line of the VCF
-	grep_command = "zcat "+refvcf+" | \\grep -m 1 ^#CHROM"
-	# print grep_command
-	grep_output = subprocess.check_output(grep_command,
-		stderr=subprocess.STDOUT,shell=True)
-	# check_output with shell=True is not considered ideal
-	# programming practice. however if you do the preferred
-	# way of passing a list of command line args to 
-	# check_output with shell=False, then subprocess waits for
-	# all commands to finish. I want to kill zcat as soon as 
-	# grep has found its first line. As it is, this code does that
-	# and it is very fast; only downside is it says
-	# "zcat: stdout: Broken pipe". I welcome any suggestions.
-	# print tabix_output
-	# print grep_output
-	column_names = grep_output.split("\n")[0].split("\t")
+	column_names = get_vcf_colnames(refvcf)
 	lines = tabix_output.split("\n")
 	match_found = False # default is you haven't found a matching variant
 	for line in lines:
