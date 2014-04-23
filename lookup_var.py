@@ -12,9 +12,6 @@ import subprocess
 import minimal_representation as mr
 import gzip
 
-# size of buffer around position to look in VCF
-pos_buffer = 100
-
 # indices of relevant columns in reftable, in 1-based numbering
 # (1-based because these will go to awk, not python
 sample_name_colno = 5 # NAME_IN_VCF column
@@ -29,6 +26,19 @@ def get_vcf_colnames(refvcf):
 				break
 	return column_names
 
+# gets lines in a VCF that are within +- pos_buffer of chr:pos
+# returns a list of strings (lines) i.e. [line1, line2, ...]
+def get_vcf_lines(refvcf,pos_buffer,chr,pos):
+	startpos = int(pos) - pos_buffer
+	endpos = int(pos) + pos_buffer
+	locus_string = chr+":"+str(startpos)+"-"+str(endpos)
+	tabix_command = "tabix " + refvcf + " " + locus_string
+	# print tabix_command
+	tabix_output = subprocess.check_output(tabix_command,
+		stderr=subprocess.STDOUT,shell=True)
+	lines = tabix_output.split("\n")
+	return lines
+
 def find_var_indivs(refvcf,reftable,chr,pos,ref,alt):
 	# dictionary to hold info on people with the variant allele
 	variant_indivs = {}
@@ -37,15 +47,8 @@ def find_var_indivs(refvcf,reftable,chr,pos,ref,alt):
 	print "# Minimal representation of your search: ",
 	print pos, ref, alt
 	# use tabix to grab 100 bp on either side of putative variant
-	startpos = int(pos) - pos_buffer
-	endpos = int(pos) + pos_buffer
-	locus_string = chr+":"+str(startpos)+"-"+str(endpos)
-	tabix_command = "tabix " + refvcf + " " + locus_string
-	# print tabix_command
-	tabix_output = subprocess.check_output(tabix_command,
-		stderr=subprocess.STDOUT,shell=True)
+	lines = get_vcf_lines(refvcf,100,chr,pos)
 	column_names = get_vcf_colnames(refvcf)
-	lines = tabix_output.split("\n")
 	match_found = False # default is you haven't found a matching variant
 	for line in lines:
 		cols = line.split("\t")
