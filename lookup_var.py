@@ -8,15 +8,14 @@
 import sys
 import re
 import os.path
-import subprocess
 import minimal_representation as mr
 import gzip
 import pysam
+import argparse
 
-# indices of relevant columns in reftable, in 1-based numbering
-# (1-based because these will go to awk, not python
-sample_name_colno = 5 # NAME_IN_VCF column
-project_name_colno = 3 # PROJECT_OR_COHORT_NAME column
+# indices of relevant columns in reftable, in 0-based numbering
+sample_name_colno = 4 # NAME_IN_VCF column
+project_name_colno = 2 # PROJECT_OR_COHORT_NAME column
 
 # courtesy of Konrad
 def get_vcf_colnames(refvcf):
@@ -30,19 +29,30 @@ def get_vcf_colnames(refvcf):
 # gets lines in a VCF that are within +- pos_buffer of chr:pos
 # returns a list of strings (lines) i.e. [line1, line2, ...]
 def get_vcf_lines(refvcf,pos_buffer,chr,pos):
-	startpos = int(pos) - pos_buffer
-	endpos = int(pos) + pos_buffer
+	startpos = int(pos) - int(pos_buffer)
+	endpos = int(pos) + int(pos_buffer)
 	tabixfile = pysam.Tabixfile(refvcf)
 	vcfline_generator = tabixfile.fetch(chr,startpos,endpos)
 	lines = list(vcfline_generator)
 	return lines
+
+def get_project_name(reftable,sample_name):
+	project_name = None
+	open_function = gzip.open if reftable.endswith('.gz') else open
+	with open_function(reftable) as f:
+		for line in f.readlines():
+			cols = line.strip().split("\t")
+			if cols[sample_name_colno] == sample_name:
+				project_name = cols[project_name_colno]
+				break
+	return project_name
 
 def find_var_indivs(refvcf,reftable,chr,pos,ref,alt):
 	# dictionary to hold info on people with the variant allele
 	variant_indivs = {}
 	# convert input variants to minimal representation
 	pos, ref, alt = mr.get_minimal_representation(pos,ref,alt)
-	print "# Minimal representation of your search: ",
+	print "##Minimal representation of your search: ",
 	print pos, ref, alt
 	# use tabix to grab 100 bp on either side of putative variant
 	lines = get_vcf_lines(refvcf,100,chr,pos)
@@ -63,7 +73,7 @@ def find_var_indivs(refvcf,reftable,chr,pos,ref,alt):
 			if vchr == chr and vpos_mr == pos and vref_mr == ref and valt_allele_mr == alt:
 				match_found = True
 				# output the variant info as called in the reference VCF
-				print "# Relevant line from VCF: ",
+				print "##Relevant line from VCF: ",
 				print '\t'.join(cols[:9])
 				allele_no = valt_alleles.index(valt_allele)
 				format_fields = vformat.split(":")
@@ -83,22 +93,18 @@ def find_var_indivs(refvcf,reftable,chr,pos,ref,alt):
 		if match_found:
 			break # stop looking for more matching sites
 	if not match_found:
-		print "# No matches found."
+		print "##No matches found."
 	else:
 		# at this point we have printed the variant call, and stored the info
 		# on each individual with the variant.
 		# now if possible we also want to look up what study they're from.
 		# the reftable parameter is optional, so we'll check if the table exists
-		if os.path.isfile(reftable):
+		if reftable is not None and os.path.isfile(reftable):
 			print "#SAMPLE\tPROJECT\tCALL"
 			for sample_name, call_info in variant_indivs.iteritems():
-				awk_command = "awk '$"+str(sample_name_colno)+" == \"" + \
-					sample_name + "\" {printf $" + str(project_name_colno) + \
-					"}' " + reftable
-				# print awk_command
-				awk_output = subprocess.check_output(awk_command,
-					stderr=subprocess.STDOUT,shell=True)
-				project_name = awk_output
+				project_name = get_project_name(reftable,sample_name)
+				if project_name is None:
+					project_name = ""
 				print sample_name+"\t"+project_name+"\t"+call_info
 		else:
 			print "#SAMPLE\tCALL"
@@ -106,15 +112,25 @@ def find_var_indivs(refvcf,reftable,chr,pos,ref,alt):
 				print sample_name+"\t"+call_info
 
 if __name__ == '__main__':
-	if len(sys.argv) < 7:
-		print "usage: python lookup_var.py reference.vcf.gz reftable.txt chr pos ref alt"
+	parser = argparse.ArgumentParser(description='Process some integers.')
+	parser.add_argument('chr', metavar='chr', type=str, 
+	                   help='chromosome of variant of interest')
+	parser.add_argument('pos', metavar='pos', type=int, 
+	                   help='position of variant of interest')
+	parser.add_argument('ref', metavar='ref', type=str, 
+	                   help='ref allele of variant of interest')
+	parser.add_argument('alt', metavar='alt', type=str, 
+	                   help='alt allele of variant of interest')
+	parser.add_argument('refvcf', metavar='reference.vcf.gz', type=str, 
+	                   help='path to gzipped, tabixed reference VCF')
+	parser.add_argument('-t','--reftable', metavar='reftable.txt', 
+		               dest='reftable', type=str, nargs='?',
+	                   help='path to table about samples in VCF')
+	args = parser.parse_args()
+	# check that the reference VCF is tabixed
+	refidx = args.refvcf + ".tbi"
+	if not os.path.isfile(refidx):
+		print "looks like your vcf isn't tabix'ed. couldn't find: "+refidx
 		exit()
-	else:
-		refvcf, reftable, chr, pos, ref, alt = sys.argv[1:7]
-		pos = int(pos) 
-		refidx = refvcf + ".tbi"
-		if not os.path.isfile(refidx):
-			print "looks like your vcf isn't tabix'ed. couldn't find: "+refidx
-			exit()
-		find_var_indivs(refvcf,reftable,chr,pos,ref,alt)
+	find_var_indivs(args.refvcf,args.reftable,args.chr,args.pos,args.ref,args.alt)
 
