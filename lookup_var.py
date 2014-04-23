@@ -112,7 +112,7 @@ def find_var_indivs(refvcf,reftable,chr,pos,ref,alt):
 				print sample_name+"\t"+call_info
 
 if __name__ == '__main__':
-	parser = argparse.ArgumentParser(description='Process some integers.')
+	parser = argparse.ArgumentParser(description='Look up a variant in a reference VCF.')
 	parser.add_argument('chr', metavar='chr', type=str, 
 	                   help='chromosome of variant of interest')
 	parser.add_argument('pos', metavar='pos', type=int, 
