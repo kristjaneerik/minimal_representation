@@ -20,3 +20,6 @@ lookup_var.py 1 878677 CCT TCT $full_86k_vcf -t $reftable_86k # as found in refe
 lookup_var.py 1 878676 ACCT ATCT $full_86k_vcf -t $reftable_86k 
 lookup_var.py 1 878677 C T $full_86k_vcf -t $reftable_86k  # searching for minimal representation
 
+# test multi-variant mode
+echo -e "1 861223 AG CG\n1 878677 CCT TCT" > variant_list.txt
+lookup_var.py $full_86k_vcf -l variant_list.txt -t $reftable_86k
