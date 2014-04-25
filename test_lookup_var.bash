@@ -14,11 +14,19 @@ lookup_var.py 1 1827835 CTTGG CTGG $na12878_alone_all
 lookup_var.py 1 861223 AG CG $full_86k_vcf -t $reftable_86k # as found in reference VCF
 lookup_var.py 1 861222 TAG TCG $full_86k_vcf -t $reftable_86k # a different non-minimal representation of same variant
 lookup_var.py 1 861223 A C $full_86k_vcf -t $reftable_86k # searching for the minimal representation
+# search for the other allele at the same site
+lookup_var.py 1 861223 AG A $full_86k_vcf -t $reftable_86k
 
 # three ways to find another variant
 lookup_var.py 1 878677 CCT TCT $full_86k_vcf -t $reftable_86k # as found in reference VCF
 lookup_var.py 1 878676 ACCT ATCT $full_86k_vcf -t $reftable_86k 
 lookup_var.py 1 878677 C T $full_86k_vcf -t $reftable_86k  # searching for minimal representation
+
+# and another
+lookup_var.py 1 879058 T TC $full_86k_vcf
+
+# also works on bi-allelic sites
+lookup_var.py 1 878680 G T $full_86k_vcf
 
 # test multi-variant mode
 echo -e "1 861223 AG CG\n1 878677 CCT TCT" > variant_list.txt

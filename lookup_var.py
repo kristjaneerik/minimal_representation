@@ -74,7 +74,7 @@ def find_var_indivs(refvcf,reftable,chr,pos,ref,alt):
                 # output the variant info as called in the reference VCF
                 print "##Relevant line from VCF: ",
                 print '\t'.join(cols[:9])
-                allele_no = valt_alleles.index(valt_allele)
+                allele_no = valt_alleles.index(valt_allele) + 1 # first alt allele is 1 (ref is 0)
                 format_fields = vformat.split(":")
                 gt_idx = format_fields.index("GT") # in what order does genotype appear
                 for column_no in range(9,len(cols)):
