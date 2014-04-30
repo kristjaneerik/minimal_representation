@@ -1,19 +1,5 @@
-This is just a temporary repository to write the 'minimal representation of a variant' code for xbrowse
-We'll wrap this up into xbrowse when we're comfortable with the result. 
+Convert variants at multi-allelic sites to their 'minimal representation', i.e. how they would be represented if they were the only allele present at the site.
 
-Two files: 
+This was forked from xBrowse and will eventually be integrated back in.
 
-- minimal_representation.py is the actual application code. 
-I think only one function is necessary but feel free to add more if necessary. 
-
-- test_minimal_representation.py is for unit tests. 
-
-Run the test with:
-
-	python test_minimal_representation.py 
-
-This has no dependencies - just Python 2.7
-
-One option is to use "test driven development" here. 
-It's a good exercise, but I probably wouldn't because of the overhead - up to you. 
-But we do need tests. 
+See explanation of this code and important use cases in [this CureFFI.org blog post](http://www.cureffi.org/2014/04/24/converting-genetic-variants-to-their-minimal-representation/).
