@@ -46,7 +46,7 @@ def get_project_name(reftable,sample_name):
                 break
     return project_name
 
-def find_var_indivs(refvcf,reftable,chr,pos,ref,alt):
+def find_var_indivs(refvcf,reftable,chr,pos,ref,alt,find_indivs):
     # dictionary to hold info on people with the variant allele
     variant_indivs = {}
     # convert input variants to minimal representation
@@ -74,20 +74,21 @@ def find_var_indivs(refvcf,reftable,chr,pos,ref,alt):
                 # output the variant info as called in the reference VCF
                 print "##Relevant line from VCF: ",
                 print '\t'.join(cols[:9])
-                allele_no = valt_alleles.index(valt_allele) + 1 # first alt allele is 1 (ref is 0)
-                format_fields = vformat.split(":")
-                gt_idx = format_fields.index("GT") # in what order does genotype appear
-                for column_no in range(9,len(cols)):
-                    call = cols[column_no]
-                    call_fields = call.split(":")
-                    genotype = call_fields[gt_idx]
-                    alleles = re.split("/|\|",genotype) # split on / or | to support UG or HC calls.
-                    # check if this individual has the allele in question
-                    if str(allele_no) in alleles:
-                        sample_name = column_names[column_no]
-                        call_info = call
-                        # store this person and their call in the dict
-                        variant_indivs[sample_name] = call_info
+                if find_indivs:
+                    allele_no = valt_alleles.index(valt_allele) + 1 # first alt allele is 1 (ref is 0)
+                    format_fields = vformat.split(":")
+                    gt_idx = format_fields.index("GT") # in what order does genotype appear
+                    for column_no in range(9,len(cols)):
+                        call = cols[column_no]
+                        call_fields = call.split(":")
+                        genotype = call_fields[gt_idx]
+                        alleles = re.split("/|\|",genotype) # split on / or | to support UG or HC calls.
+                        # check if this individual has the allele in question
+                        if str(allele_no) in alleles:
+                            sample_name = column_names[column_no]
+                            call_info = call
+                            # store this person and their call in the dict
+                            variant_indivs[sample_name] = call_info
                 break # stop looking for more matching alleles
         if match_found:
             break # stop looking for more matching sites
@@ -98,17 +99,18 @@ def find_var_indivs(refvcf,reftable,chr,pos,ref,alt):
         # on each individual with the variant.
         # now if possible we also want to look up what study they're from.
         # the reftable parameter is optional, so we'll check if the table exists
-        if reftable is not None and os.path.isfile(reftable):
+        if find_indivs and reftable is not None and os.path.isfile(reftable):
             print "#SAMPLE\tPROJECT\tCALL"
             for sample_name, call_info in variant_indivs.iteritems():
                 project_name = get_project_name(reftable,sample_name)
                 if project_name is None:
                     project_name = ""
                 print "%s\t%s\t%s" % (sample_name, project_name, call_info)
-        else:
+        elif find_indivs:
             print "#SAMPLE\tCALL"
             for sample_name, call_info in variant_indivs.iteritems():
                 print "%s\t%s" % (sample_name, call_info)
+        # else do nothing
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Look up a variant in a reference VCF.')
@@ -129,6 +131,8 @@ if __name__ == '__main__':
     parser.add_argument('-t','--reftable', metavar='reftable.txt', 
                        dest='reftable', type=str, nargs='?',
                        help='path to table about samples in VCF')
+    parser.add_argument('-i','--indivs', action='store_true',
+                       help='Return list of individuals with the variant')
     args = parser.parse_args()
     # check that the reference VCF is tabixed
     refidx = args.refvcf + ".tbi"
@@ -145,12 +149,12 @@ if __name__ == '__main__':
                         continue # skip empty lines
                     chr, pos, ref, alt = line.strip().split()
                     pos = int(pos)
-                    find_var_indivs(args.refvcf,args.reftable,chr,pos,ref,alt)
+                    find_var_indivs(args.refvcf,args.reftable,chr,pos,ref,alt,args.indivs)
         else:
             print "##Couldn't find file you specified: %s" % (args.varlist)
             exit()
     elif (not any (x is None for x in [args.chr,args.pos,args.ref,args.alt])):
-        find_var_indivs(args.refvcf,args.reftable,args.chr,args.pos,args.ref,args.alt)
+        find_var_indivs(args.refvcf,args.reftable,args.chr,args.pos,args.ref,args.alt,args.indivs)
     else:
         print "##You specified neither a single variant nor a list of variants."
         exit()
