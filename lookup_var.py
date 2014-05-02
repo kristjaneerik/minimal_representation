@@ -21,7 +21,7 @@ def get_vcf_colnames(refvcf):
     with gzip.open(refvcf) as f:
         for line in f:
             if line.startswith('#CHROM'):
-                column_names = line.strip().split()
+                column_names = line.strip().split("\t") # need "\t" otherwise split() breaks when sample ids contain spaces
                 break
     return column_names
 
