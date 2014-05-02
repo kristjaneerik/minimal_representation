@@ -149,12 +149,14 @@ if __name__ == '__main__':
                         continue # skip empty lines
                     chr, pos, ref, alt = line.strip().split()
                     pos = int(pos)
-                    find_var_indivs(args.refvcf,args.reftable,chr,pos,ref,alt,args.indivs)
+                    for alt_allele in alt.split(","):
+                        find_var_indivs(args.refvcf,args.reftable,chr,pos,ref,alt_allele,args.indivs)
         else:
             print "##Couldn't find file you specified: %s" % (args.varlist)
             exit()
     elif (not any (x is None for x in [args.chr,args.pos,args.ref,args.alt])):
-        find_var_indivs(args.refvcf,args.reftable,args.chr,args.pos,args.ref,args.alt,args.indivs)
+        for alt_allele in args.alt.split(","):
+            find_var_indivs(args.refvcf,args.reftable,args.chr,args.pos,args.ref,alt_allele,args.indivs)
     else:
         print "##You specified neither a single variant nor a list of variants."
         exit()
