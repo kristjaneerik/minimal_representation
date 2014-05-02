@@ -33,3 +33,7 @@ echo -e "1 861223 AG CG\n1 878677 CCT TCT" > variant_list.txt
 lookup_var.py $full_86k_vcf -l variant_list.txt -t $reftable_86k -i
 # or without returning individual-level variants
 lookup_var.py $full_86k_vcf -l variant_list.txt -t $reftable_86k
+
+# can also look up both alleles at a site if comma-separated in input
+# (useful for grabbing lines directly from a VCF to look up)
+lookup_var.py 1 861223 AG A,CG $full_86k_vcf -t $reftable_86k -i
