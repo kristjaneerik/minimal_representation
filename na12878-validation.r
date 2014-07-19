@@ -23,7 +23,7 @@ where    not exists (
 #   count(*)
 # 1      135
 
-source("minimal_representation.r")
+source("minimal-representation.r")
 
 # convert "alone" and "joint" allele sets to minimal representation
 alone_mr = alone
