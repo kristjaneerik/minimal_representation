@@ -14,7 +14,6 @@ def get_minimal_representation(pos, ref, alt):
     Returns: 
         tuple: (pos, ref, alt) of remapped coordinate
     """
-    #print "given: ", pos, ref, alt
     # If it's a simple SNV, don't remap anything
     if len(ref) == 1 and len(alt) == 1: 
         return pos, ref, alt
@@ -28,5 +27,4 @@ def get_minimal_representation(pos, ref, alt):
             alt = alt[1:]
             ref = ref[1:]
             pos += 1
-        #print 'returning: ', pos, ref, alt
         return pos, ref, alt 
