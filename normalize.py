@@ -41,7 +41,19 @@ class RefEqualsAltError(Exception):
         def __str__(self):
             return repr(self.value)
 
+'''
+An Error class for REF or ALT values that are not valid nucleotide sequences
+'''
 class InvalidNucleotideSequenceError(Exception):
+        def __init__(self, value):
+            self.value = value
+        def __str__(self):
+            return repr(self.value)
+
+'''
+An Error class for variants where the REF does not match the reference genome
+'''
+class WrongRefError(Exception):
         def __init__(self, value):
             self.value = value
         def __str__(self):
@@ -56,6 +68,10 @@ def normalize(pysam_fasta, chrom, pos, ref, alt):
     pos = int(pos) # make sure position is an integer
     ref = ref.upper()
     alt = alt.upper()
+    # check whether the REF is correct
+    true_ref = pysam_fasta.fetch(chrom, pos - 1, pos - 1 + len(ref))
+    if ref != true_ref:
+        raise WrongRefError('Incorrect REF value: %s %s %s %s (actual REF should be %s)'%(chrom, pos, ref, alt, true_ref))
     # time-saving shortcut for SNPs that are already minimally represented
     if len(ref) == 1 and len(alt) == 1 and ref in ['A','C','G','T'] and alt in ['A','C','G','T']:
         return chrom, pos, ref, alt
