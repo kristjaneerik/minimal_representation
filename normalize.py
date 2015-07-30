@@ -146,8 +146,8 @@ def normalize_tab_delimited_file(infile, outfile, reference_fasta, verbose=True)
 Battery of test cases for normalize
 '''
 def test_normalize(pysam_fasta):
-    print normalize(pysam_fasta, '7', 117199646, 'CTT', '-') # HGVS translation of CFTR p.F508del, should be ('7', 117199644, 'ATCT', 'A')
-    print normalize(pysam_fasta, '13', 32914438, 'T', '-') # HGVS translation of a BRCA2 Ashkenazi founder variant, should be ('13', 32914437, 'GT', 'G')
+    sys.stdout.write(str(normalize(pysam_fasta, '7', 117199646, 'CTT', '-'))+'\n') # HGVS translation of CFTR p.F508del, should be ('7', 117199644, 'ATCT', 'A')
+    sys.stdout.write(str(normalize(pysam_fasta, '13', 32914438, 'T', '-'))+'\n') # HGVS translation of a BRCA2 Ashkenazi founder variant, should be ('13', 32914437, 'GT', 'G')
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Python implementation of vt normalize')
