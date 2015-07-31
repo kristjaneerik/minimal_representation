@@ -132,6 +132,9 @@ def normalize_tab_delimited_file(infile, outfile, reference_fasta, verbose=True)
         except RefEqualsAltError as e:
             sys.stderr.write('\n'+str(e)+'\n')
             continue
+        except WrongRefError as e:
+            sys.stderr.write('\n'+str(e)+'\n')
+            continue
         except InvalidNucleotideSequenceError as e:
             sys.stderr.write('\n'+str(e)+'\n')
             continue
