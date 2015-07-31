@@ -120,6 +120,9 @@ def normalize_tab_delimited_file(infile, outfile, reference_fasta, verbose=True)
     columns = header.strip('\n').split('\t')  # parse col names 
     outfile.write('\t'.join(columns) + '\n') # write header line plus the CpG col to be generated
     counter = 0
+    ref_equals_alt = 0
+    wrong_ref = 0
+    invalid_nucleotide = 0
     for line in infile.readlines():
         data = dict(zip(columns,line.strip('\n').split('\t')))
         # fill the data with blanks for any missing data
@@ -131,12 +134,15 @@ def normalize_tab_delimited_file(infile, outfile, reference_fasta, verbose=True)
             data['chrom'], pos, data['ref'], data['alt'] = normalize(pysam_fasta, data['chrom'], pos, data['ref'], data['alt'])
         except RefEqualsAltError as e:
             sys.stderr.write('\n'+str(e)+'\n')
+            ref_equals_alt += 1
             continue
         except WrongRefError as e:
             sys.stderr.write('\n'+str(e)+'\n')
+            wrong_ref += 1
             continue
         except InvalidNucleotideSequenceError as e:
             sys.stderr.write('\n'+str(e)+'\n')
+            invalid_nucleotide += 1
             continue
         data['pos'] = str(pos)
         outfile.write('\t'.join([data[column] for column in columns]) + '\n')
@@ -144,6 +150,8 @@ def normalize_tab_delimited_file(infile, outfile, reference_fasta, verbose=True)
         if verbose:
             sys.stderr.write("\r%s records processed"%(counter))
     outfile.write('\n\n')
+    if verbose:
+        sys.stderr.write("Final counts of variants discarded:\nREF == ALT: %s\nWrong REF: %s\nInvalid nucleotide: %s\n")
 
 '''
 Battery of test cases for normalize
