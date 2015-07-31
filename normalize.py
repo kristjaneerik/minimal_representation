@@ -148,7 +148,7 @@ def normalize_tab_delimited_file(infile, outfile, reference_fasta, verbose=True)
         outfile.write('\t'.join([data[column] for column in columns]) + '\n')
         counter += 1
         if verbose:
-            sys.stderr.write("\r%s records processed"%(counter))
+            sys.stderr.write("\r%s records processed\n"%(counter))
     outfile.write('\n\n')
     if verbose:
         sys.stderr.write("Final counts of variants discarded:\nREF == ALT: %s\nWrong REF: %s\nInvalid nucleotide: %s\n"%(ref_equals_alt, wrong_ref, invalid_nucleotide))
