@@ -68,25 +68,25 @@ def normalize(pysam_fasta, chrom, pos, ref, alt):
     pos = int(pos) # make sure position is an integer
     ref = ref.upper()
     alt = alt.upper()
-    # check whether the REF is correct
-    true_ref = pysam_fasta.fetch(chrom, pos - 1, pos - 1 + len(ref))
-    if ref != true_ref:
-        raise WrongRefError('Incorrect REF value: %s %s %s %s (actual REF should be %s)'%(chrom, pos, ref, alt, true_ref))
-    # time-saving shortcut for SNPs that are already minimally represented
-    if len(ref) == 1 and len(alt) == 1 and ref in ['A','C','G','T'] and alt in ['A','C','G','T']:
-        return chrom, pos, ref, alt
     # Remove variants that contain invalid nucleotides
     if any(letter not in ['A','C','G','T','N','-'] for letter in ref + alt):
         raise InvalidNucleotideSequenceError('Invalid nucleotide sequence: %s %s %s %s'%(chrom, pos, ref, alt))
-    # Prevent infinte loops in cases where REF == ALT.
-    # We have encountered this error in genomic coordinates from the ClinVar XML file
-    if ref == alt:
-        raise RefEqualsAltError('The REF and ALT allele are the same: %s %s %s %s'%(chrom, pos, ref, alt))
     # use blanks instead of hyphens
     if ref == '-':
         ref = ''
     if alt == '-':
         alt = ''
+    # check whether the REF is correct
+    true_ref = pysam_fasta.fetch(chrom, pos - 1, pos - 1 + len(ref))
+    if ref != true_ref:
+        raise WrongRefError('Incorrect REF value: %s %s %s %s (actual REF should be %s)'%(chrom, pos, ref, alt, true_ref))
+    # Prevent infinte loops in cases where REF == ALT.
+    # We have encountered this error in genomic coordinates from the ClinVar XML file
+    if ref == alt:
+        raise RefEqualsAltError('The REF and ALT allele are the same: %s %s %s %s'%(chrom, pos, ref, alt))
+    # Time-saving shortcut for SNPs that are already minimally represented
+    if len(ref) == 1 and len(alt) == 1 and ref in ['A','C','G','T'] and alt in ['A','C','G','T']:
+        return chrom, pos, ref, alt
     # This first loop left-aligns and removes excess nucleotides on the right.
     # This is Algorithm 1 lines 1-6 from Tan et al 2015
     keep_working = True
