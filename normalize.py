@@ -77,7 +77,7 @@ def normalize(pysam_fasta, chrom, pos, ref, alt):
     if alt == '-':
         alt = ''
     # check whether the REF is correct
-    true_ref = pysam_fasta.fetch(chrom, pos - 1, pos - 1 + len(ref))
+    true_ref = pysam_fasta.fetch(chrom, pos - 1, pos - 1 + len(ref)).upper()
     if ref != true_ref:
         raise WrongRefError('Incorrect REF value: %s %s %s %s (actual REF should be %s)'%(chrom, pos, ref, alt, true_ref))
     # Prevent infinte loops in cases where REF == ALT.
