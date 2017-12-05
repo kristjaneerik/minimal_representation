@@ -114,7 +114,7 @@ This function takes a tab-delimited file with a header line containing columns
 named chrom, pos, ref, and alt, plus any other columns. It normalizes the
 chrom, pos, ref, and alt, and writes all columns out to another file.
 '''
-def normalize_tab_delimited_file(infile, outfile, reference_fasta, verbose=False):
+def normalize_tab_delimited_file(infile, outfile, reference_fasta, verbose=True):
     pysam_fasta = pysam.FastaFile(reference_fasta) # create a pysam object of the reference genome
     header = infile.readline() # get header of input file
     columns = header.strip('\n').split('\t')  # parse col names 
